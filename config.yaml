@@ -4,16 +4,17 @@ llm:
   api_url: "https://integrate.api.nvidia.com/v1/chat/completions"
   api_key: "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"
   model: "qwen/qwen3-coder-480b-a35b-instruct"
-  max_tokens: 8192
-  temperature: 0.8
+  max_tokens: 16384
+  temperature: 0.85
 
 news:
   topics:
-    - "US breaking news today"
-    - "tech industry latest"
-    - "AI artificial intelligence news"
-    - "stock market financial news"
-  max_articles: 8
+    - "China US geopolitical tension"
+    - "cybersecurity attack breach"
+    - "AI regulation policy"
+    - "tech war chip ban"
+    - "international conflict military"
+  max_articles: 10
   selected_count: 3
 
 email:

@@ -17,32 +17,24 @@ CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yaml")
 def _repair_json(text: str) -> dict:
     """尝试修复截断或格式错误的 JSON"""
     import re
-    # 提取已有的字段
     result = {}
     
-    # 提取 title
     m = re.search(r'"title"\s*:\s*"([^"]*)"', text)
     if m:
         result["title"] = m.group(1)
     
-    # 提取 subtitle
     m = re.search(r'"subtitle"\s*:\s*"([^"]*)"', text)
     if m:
         result["subtitle"] = m.group(1)
     
-    # 提取 lead
     m = re.search(r'"lead"\s*:\s*"((?:[^"\\]|\\.)*)"', text)
     if m:
         result["lead"] = m.group(1)
     
-    # 提取 content_html（可能被截断，取最大块）
     m = re.search(r'"content_html"\s*:\s*"((?:[^"\\]|\\.)*)', text, re.DOTALL)
     if m:
         content = m.group(1)
-        # 修复被截断的HTML标签
         open_tags = re.findall(r'<(\w+)[^>]*>', content)
-        close_tags = re.findall(r'</(\w+)>', content)
-        # 关闭未关闭的标签
         open_stack = []
         for tag in open_tags:
             if f'</{tag}>' not in content[content.find(tag):]:
@@ -51,13 +43,11 @@ def _repair_json(text: str) -> dict:
             content += f'</{tag}>'
         result["content_html"] = content
     
-    # 提取 tags
     m = re.search(r'"tags"\s*:\s*\[(.*?)\]', text, re.DOTALL)
     if m:
         tags = re.findall(r'"([^"]*)"', m.group(1))
         result["tags"] = tags
     
-    # 提取 summary
     m = re.search(r'"summary"\s*:\s*"([^"]*)"', text)
     if m:
         result["summary"] = m.group(1)
@@ -102,16 +92,15 @@ def call_llm(prompt: str, system_prompt: str = "", config: dict = None) -> str:
         json={
             "model": llm_cfg["model"],
             "messages": messages,
-            "max_tokens": llm_cfg.get("max_tokens", 4096),
-            "temperature": llm_cfg.get("temperature", 0.8),
+            "max_tokens": llm_cfg.get("max_tokens", 8192),
+            "temperature": llm_cfg.get("temperature", 0.85),
         },
-        timeout=120
+        timeout=300
     )
     resp.raise_for_status()
     result = resp.json()
     
     content = result["choices"][0]["message"]["content"]
-    # 清理可能的 markdown 代码块
     if content.startswith("```"):
         content = content.split("\n", 1)[1] if "\n" in content else content[3:]
         if content.endswith("```"):
@@ -119,24 +108,36 @@ def call_llm(prompt: str, system_prompt: str = "", config: dict = None) -> str:
     return content.strip()
 
 
-SYSTEM_PROMPT = """你是一位顶级公众号爆款文章写手，擅长将国际新闻翻译改编为中文爆款文章。
+SYSTEM_PROMPT = """你是一位顶级公众号爆款文章写手，擅长将国际新闻深度改编为中文爆款文章。
 
-1. **翻译与改编**：将英文新闻翻译成地道中文，同时保留核心信息，适合中国读者阅读
-2. **标题**：抓人眼球，善用数字、悬念、对比、情绪词，让人忍不住点开
-3. **导语**：一两句话点明核心，制造好奇心
-4. **正文结构清晰**：使用小标题分段，每段聚焦一个要点
+你的写作风格特点：
+- 深度分析型，不是简单翻译，而是加入背景、解读、影响分析
+- 善于制造悬念和冲突，让读者欲罢不能
+- 政治、安全、科技类新闻是你的强项
+- 每篇文章必须2000字以上，内容充实有料
+
+具体要求：
+
+1. **选题策略**：优先选择涉及国际政治、网络安全、地缘冲突、科技竞争等自带流量的话题
+2. **标题**：必须抓人眼球，善用数字、悬念、对比、情绪词，让人忍不住点开
+3. **导语**：3-4句话，制造强烈好奇心，暗示后续有猛料
+4. **正文结构**：
+   - 使用小标题分段，每段聚焦一个要点
+   - 至少5-7个小标题段落
+   - 每段至少200-300字
+   - 加入背景分析、多方观点、深层影响
 5. **语言风格**：
    - 口语化但不失专业感
    - 善用短句、金句
-   - 绝对禁止使用任何emoji/表情符号（如🔴、📰、✨等），只用文字
+   - 绝对禁止使用任何emoji/表情符号，只用文字
    - 善用"你"拉近与读者距离
-6. **数据支撑**：引用具体数字、案例增强说服力
-7. **结尾有力**：总结观点，引发思考或讨论
+6. **数据支撑**：引用具体数字、案例、历史事件增强说服力
+7. **结尾有力**：总结观点，引发思考，留下悬念或讨论空间
 8. **SEO思维**：关键词自然融入，适合搜索传播
 
 你输出的是纯 HTML 片段（不需要 <html><body> 等外层标签），用于嵌入邮件模板。
 - 使用 <h2> 作为小标题
-- 使用 <p> 作为正文段落
+- 使用 <p> 作为正文段落（每段至少3-4句话）
 - 使用 <blockquote> 作为引用/金句
 - 使用 <strong> 加粗重点
 - 使用 <ul><li> 列举要点
@@ -160,27 +161,35 @@ def generate_article(news_items: list[dict], config: dict = None) -> dict:
     if config is None:
         config = load_config()
     
-    # 构建新闻素材
     news_text = ""
     for i, item in enumerate(news_items, 1):
         news_text += f"\n{i}. 【{item['source']}】{item['title']}"
         if item.get("desc"):
-            news_text += f"\n   详情：{item['desc'][:200]}"
+            news_text += f"\n   详情：{item['desc'][:300]}"
+        if item.get("url"):
+            news_text += f"\n   链接：{item['url']}"
     
     prompt = f"""以下是今日热点新闻素材，请从中选取最有话题性和传播力的 2-3 个相关联的热点，
-写一篇爆款公众号推文。
+写一篇深度爆款公众号推文。
+
+重点关注方向：
+- 国际政治博弈、地缘冲突
+- 网络安全、数据泄露、黑客攻击
+- 科技竞争、芯片战争、AI监管
+- 中美关系、贸易摩擦
 
 📰 今日热点素材：
 {news_text}
 
 📝 输出要求：
+文章必须2000字以上，深度分析，不是简单翻译新闻。
 请严格按以下 JSON 格式输出（不要输出其他内容）：
 
 {{
   "title": "吸引人的文章标题（15-25字）",
   "subtitle": "一句话副标题",
-  "lead": "导语段落（2-3句话，制造好奇心）",
-  "content_html": "正文HTML（使用h2/p/blockquote/strong/ul/li等标签，2000-3000字）",
+  "lead": "导语段落（3-4句话，制造强烈好奇心）",
+  "content_html": "正文HTML（使用h2/p/blockquote/strong/ul/li等标签，必须2000字以上，至少5-7个小标题段落）",
   "tags": ["标签1", "标签2", "标签3"],
   "summary": "一句话摘要（50字内）"
 }}"""
@@ -188,23 +197,19 @@ def generate_article(news_items: list[dict], config: dict = None) -> dict:
     logger.info("正在调用 LLM 生成推文...")
     raw = call_llm(prompt, SYSTEM_PROMPT, config)
     
-    # 解析 JSON
     try:
         article = json.loads(raw)
     except json.JSONDecodeError:
         import re
-        # 尝试从文本中提取 JSON
         match = re.search(r'\{.*\}', raw, re.DOTALL)
         if match:
             try:
                 article = json.loads(match.group())
             except json.JSONDecodeError:
-                # 尝试修复截断的 JSON
                 article = _repair_json(match.group())
         else:
             raise ValueError(f"LLM 输出无法解析为 JSON:\n{raw[:500]}")
     
-    # 验证必要字段
     required = ["title", "content_html"]
     for field in required:
         if field not in article:
@@ -215,16 +220,19 @@ def generate_article(news_items: list[dict], config: dict = None) -> dict:
     article.setdefault("tags", [])
     article.setdefault("summary", article["title"])
     
-    logger.info(f"推文生成完成: {article['title']}")
+    # 检查字数
+    content = article["content_html"]
+    char_count = len(content)
+    logger.info(f"推文生成完成: {article['title']} ({char_count}字)")
+    
     return article
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    # 测试用
     test_news = [
-        {"title": "GPT-5发布在即", "desc": "OpenAI即将发布新一代模型", "source": "科技"},
-        {"title": "A股突破3500点", "desc": "沪指创年内新高", "source": "财经"},
+        {"title": "US-China tech war escalates", "desc": "New chip export restrictions announced", "source": "Reuters"},
+        {"title": "Major data breach at US agency", "desc": "Millions of records exposed", "source": "CNN"},
     ]
     result = generate_article(test_news)
     print(json.dumps(result, ensure_ascii=False, indent=2))
