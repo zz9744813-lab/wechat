@@ -29,7 +29,7 @@ def _load_env():
 
 _load_env()
 
-from collect_news import collect_all as collect_all_news
+from news_collector import collect_all_news
 from writer import generate_article
 from formatter import render_article, render_email_subject
 from sender import send_html_email

@@ -1,6 +1,6 @@
 """
 热点新闻采集模块
-从百度热搜、微博热搜等渠道采集当日热点
+从美国新闻源采集热点，翻译为中文
 """
 
 import requests
@@ -15,112 +15,124 @@ logger = logging.getLogger(__name__)
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
+TIMEOUT = 15
 
 
-def fetch_baidu_hot() -> list[dict]:
-    """百度热搜"""
+def fetch_reddit_popular() -> list[dict]:
+    """Reddit 热门帖子"""
     items = []
     try:
-        # 百度热搜页面
         resp = requests.get(
-            "https://top.baidu.com/board?tab=realtime",
+            "https://www.reddit.com/r/popular.json?limit=20",
+            headers={**HEADERS, "Accept": "application/json"},
+            timeout=TIMEOUT
+        )
+        data = resp.json()
+        for post in data.get("data", {}).get("children", [])[:15]:
+            p = post.get("data", {})
+            if p.get("title"):
+                items.append({
+                    "title": p["title"],
+                    "desc": p.get("selftext", "")[:200],
+                    "source": "Reddit",
+                    "url": f"https://reddit.com{p.get('permalink', '')}",
+                    "hot": p.get("ups", 0)
+                })
+        logger.info(f"Reddit: {len(items)} posts")
+    except Exception as e:
+        logger.warning(f"Reddit failed: {e}")
+    return items
+
+
+def fetch_hackernews() -> list[dict]:
+    """Hacker News 热门"""
+    items = []
+    try:
+        resp = requests.get(
+            "https://hacker-news.firebaseio.com/v0/topstories.json",
+            timeout=TIMEOUT
+        )
+        story_ids = resp.json()[:15]
+        for sid in story_ids:
+            try:
+                story = requests.get(
+                    f"https://hacker-news.firebaseio.com/v0/item/{sid}.json",
+                    timeout=5
+                ).json()
+                if story and story.get("title"):
+                    items.append({
+                        "title": story["title"],
+                        "desc": "",
+                        "source": "Hacker News",
+                        "url": story.get("url", f"https://news.ycombinator.com/item?id={sid}"),
+                        "hot": story.get("score", 0)
+                    })
+            except:
+                continue
+        logger.info(f"Hacker News: {len(items)} items")
+    except Exception as e:
+        logger.warning(f"Hacker News failed: {e}")
+    return items
+
+
+def fetch_techcrunch() -> list[dict]:
+    """TechCrunch 头条"""
+    items = []
+    try:
+        resp = requests.get("https://techcrunch.com/", headers=HEADERS, timeout=TIMEOUT)
+        soup = BeautifulSoup(resp.text, "html.parser")
+        seen = set()
+        for a in soup.find_all("a"):
+            text = a.get_text(strip=True)
+            href = a.get("href", "")
+            if 20 < len(text) < 100 and text not in seen and "techcrunch.com" in href:
+                seen.add(text)
+                items.append({
+                    "title": text,
+                    "desc": "",
+                    "source": "TechCrunch",
+                    "url": href,
+                    "hot": 0
+                })
+                if len(items) >= 15:
+                    break
+        logger.info(f"TechCrunch: {len(items)} items")
+    except Exception as e:
+        logger.warning(f"TechCrunch failed: {e}")
+    return items
+
+
+def fetch_cnn_top() -> list[dict]:
+    """CNN 头条"""
+    items = []
+    try:
+        resp = requests.get(
+            "https://lite.cnn.com",
             headers=HEADERS,
-            timeout=15
+            timeout=TIMEOUT
         )
         soup = BeautifulSoup(resp.text, "html.parser")
-        
-        # 从页面提取热搜条目
-        scripts = soup.find_all("script")
-        for script in scripts:
-            if script.string and "hotData" in script.string:
-                # 尝试从JSON数据中提取
-                match = re.search(r'var\s+\w+\s*=\s*(\[.*?\]);', script.string, re.DOTALL)
-                if match:
-                    try:
-                        data = json.loads(match.group(1))
-                        for item in data[:15]:
-                            if isinstance(item, dict):
-                                items.append({
-                                    "title": item.get("word", item.get("query", "")),
-                                    "desc": item.get("desc", ""),
-                                    "source": "百度热搜",
-                                    "hot": item.get("hotScore", 0)
-                                })
-                    except json.JSONDecodeError:
-                        pass
-        
-        # 备用：直接从HTML解析
-        if not items:
-            cards = soup.select(".category-wrap_iQLoo")
-            for card in cards[:15]:
-                title_el = card.select_one(".c-single-text-ellipsis")
-                desc_el = card.select_one(".hot-desc_1m_jR")
-                if title_el:
+        seen = set()
+        for li in soup.find_all("li"):
+            a = li.find("a")
+            if a:
+                text = a.get_text(strip=True)
+                href = a.get("href", "")
+                if 15 < len(text) < 100 and text not in seen:
+                    seen.add(text)
+                    url = href if href.startswith("http") else f"https://lite.cnn.com{href}"
                     items.append({
-                        "title": title_el.get_text(strip=True),
-                        "desc": desc_el.get_text(strip=True) if desc_el else "",
-                        "source": "百度热搜",
+                        "title": text,
+                        "desc": "",
+                        "source": "CNN",
+                        "url": url,
                         "hot": 0
                     })
-        
-        logger.info(f"百度热搜: 获取 {len(items)} 条")
+                    if len(items) >= 15:
+                        break
+        logger.info(f"CNN: {len(items)} items")
     except Exception as e:
-        logger.warning(f"百度热搜获取失败: {e}")
-    
-    return items
-
-
-def fetch_weibo_hot() -> list[dict]:
-    """微博热搜（通过移动端API）"""
-    items = []
-    try:
-        resp = requests.get(
-            "https://m.weibo.cn/api/container/getIndex?containerid=106003type%3D25%26t%3D3%26disable_hot%3D1%26filter_type%3Drealtimehot",
-            headers={**HEADERS, "Referer": "https://m.weibo.cn/"},
-            timeout=15
-        )
-        data = resp.json()
-        cards = data.get("data", {}).get("cards", [])
-        for card in cards:
-            card_group = card.get("card_group", [])
-            for item in card_group[:15]:
-                desc = item.get("desc", "")
-                if desc:
-                    items.append({
-                        "title": desc,
-                        "desc": item.get("desc_extr", ""),
-                        "source": "微博热搜",
-                        "hot": item.get("desc_extr", 0)
-                    })
-        logger.info(f"微博热搜: 获取 {len(items)} 条")
-    except Exception as e:
-        logger.warning(f"微博热搜获取失败: {e}")
-    
-    return items
-
-
-def fetch_zhihu_hot() -> list[dict]:
-    """知乎热榜"""
-    items = []
-    try:
-        resp = requests.get(
-            "https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=15",
-            headers={**HEADERS, "Referer": "https://www.zhihu.com/"},
-            timeout=15
-        )
-        data = resp.json()
-        for item in data.get("data", [])[:15]:
-            target = item.get("target", {})
-            items.append({
-                "title": target.get("title", ""),
-                "desc": target.get("excerpt", ""),
-                "source": "知乎热榜",
-                "hot": int(item.get("detail_text", "0").replace("万热度", "0000").replace(" 热度", ""))
-            })
-        logger.info(f"知乎热榜: 获取 {len(items)} 条")
-    except Exception as e:
-        logger.warning(f"知乎热榜获取失败: {e}")
-    
+        logger.warning(f"CNN failed: {e}")
     return items
 
 
@@ -128,21 +140,20 @@ def collect_all_news() -> list[dict]:
     """采集所有渠道的热点新闻并去重"""
     all_news = []
     
-    for fetcher in [fetch_baidu_hot, fetch_weibo_hot, fetch_zhihu_hot]:
+    for fetcher in [fetch_reddit_popular, fetch_hackernews, fetch_techcrunch, fetch_cnn_top]:
         try:
             news = fetcher()
             all_news.extend(news)
         except Exception as e:
-            logger.error(f"采集器 {fetcher.__name__} 失败: {e}")
+            logger.error(f"Fetcher {fetcher.__name__} failed: {e}")
     
-    # 去重（基于标题相似度）
+    # 去重
     seen = set()
     unique_news = []
     for item in all_news:
         title = item["title"].strip()
         if not title or len(title) < 4:
             continue
-        # 简单去重：标题前15个字符
         key = title[:15]
         if key not in seen:
             seen.add(key)
@@ -151,7 +162,7 @@ def collect_all_news() -> list[dict]:
     # 按热度排序
     unique_news.sort(key=lambda x: x.get("hot", 0), reverse=True)
     
-    logger.info(f"共采集 {len(unique_news)} 条不重复热点")
+    logger.info(f"Total: {len(unique_news)} unique headlines")
     return unique_news
 
 

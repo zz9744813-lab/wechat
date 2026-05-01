@@ -1,18 +1,18 @@
 # 公众号推文自动写作系统配置
 
 llm:
-  api_url: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions"
-  api_key: "tp-cylah1ezgj4uvb20rvmdmg395ha4u2tbo384o1gtdmkwdgbz"
-  model: "mimo-v2.5-pro"
+  api_url: "https://integrate.api.nvidia.com/v1/chat/completions"
+  api_key: "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"
+  model: "qwen/qwen3-coder-480b-a35b-instruct"
   max_tokens: 8192
   temperature: 0.8
 
 news:
   topics:
-    - "今日热点新闻"
-    - "科技数码最新动态"
-    - "AI人工智能最新进展"
-    - "财经股市热点"
+    - "US breaking news today"
+    - "tech industry latest"
+    - "AI artificial intelligence news"
+    - "stock market financial news"
   max_articles: 8
   selected_count: 3
 
