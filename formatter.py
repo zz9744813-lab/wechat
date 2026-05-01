@@ -68,4 +68,4 @@ def render_article(article: dict, output_dir: str = None) -> str:
 def render_email_subject(article: dict) -> str:
     """生成邮件标题"""
     date_str = datetime.now().strftime("%m/%d")
-    return f"📰 每日爆款推文 | {date_str} | {article.get('title', '今日热点')}"
+    return f"每日爆款推文 | {date_str} | {article.get('title', '今日热点')}"

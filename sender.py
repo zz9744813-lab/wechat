@@ -7,8 +7,21 @@ import os
 import subprocess
 import tempfile
 import logging
+import base64
 
 logger = logging.getLogger(__name__)
+
+
+def _encode_subject(subject: str) -> str:
+    """RFC 2047 编码中文标题"""
+    # 检查是否包含非ASCII字符
+    try:
+        subject.encode('ascii')
+        return subject  # 纯ASCII，不需要编码
+    except UnicodeEncodeError:
+        # 使用 Base64 编码
+        encoded = base64.b64encode(subject.encode('utf-8')).decode('ascii')
+        return f"=?UTF-8?B?{encoded}?="
 
 
 def send_html_email(
@@ -35,10 +48,13 @@ def send_html_email(
     # 构造邮件内容（含 HTML 和纯文本备用）
     plain_text = _html_to_plain(html_content)
     
+    # 编码中文标题
+    encoded_subject = _encode_subject(subject)
+    
     # 写入临时文件发送
     email_content = f"""From: {sender}
 To: {recipient}
-Subject: {subject}
+Subject: {encoded_subject}
 Content-Type: multipart/alternative; boundary="BOUNDARY"
 
 --BOUNDARY
@@ -70,10 +86,10 @@ Content-Type: text/html; charset=utf-8
         else:
             logger.error(f"邮件发送失败: {result.stderr}")
             # 备用方案：直接用 himalaya 的简单方式
-            return _send_simple(subject, html_content, recipient, sender)
+            return _send_simple(encoded_subject, html_content, recipient, sender)
     except Exception as e:
         logger.error(f"邮件发送异常: {e}")
-        return _send_simple(subject, html_content, recipient, sender)
+        return _send_simple(encoded_subject, html_content, recipient, sender)
     finally:
         os.unlink(tmp_path)
 
