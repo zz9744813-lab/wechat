@@ -1,0 +1,28 @@
+# 公众号推文自动写作系统配置
+
+llm:
+  api_url: "https://token-plan-cn.xiaomimimo.com/v1/chat/completions"
+  api_key: "tp-cylah1ezgj4uvb20rvmdmg395ha4u2tbo384o1gtdmkwdgbz"
+  model: "mimo-v2.5-pro"
+  max_tokens: 8192
+  temperature: 0.8
+
+news:
+  # 新闻搜索关键词/话题
+  topics:
+    - "今日热点新闻"
+    - "科技数码最新动态"
+    - "AI人工智能最新进展"
+    - "财经股市热点"
+  # 每次选取的新闻条数
+  max_articles: 8
+  # 筛选后用于写作的条数
+  selected_count: 3
+
+email:
+  recipient: "1873298001@qq.com"
+  sender: "1873298001@qq.com"
+
+output:
+  dir: "/root/wechat/output"
+  keep_days: 30  # 保留最近30天的文章
