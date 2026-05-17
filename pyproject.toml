@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wechat-content-engine"
+version = "2.0.0"
+description = "微信公众号内容引擎 — AI 写作 + 新闻采集 + 模板排版 + 定时发布"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "aiosqlite>=0.20.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "jinja2>=3.1.4",
+    "httpx>=0.28.0",
+    "anthropic>=0.42.0",
+    "apscheduler>=3.10.4",
+    "feedparser>=6.0.11",
+    "beautifulsoup4>=4.12.3",
+    "python-multipart>=0.0.18",
+    "markdown>=3.7",
+    "rich>=13.9.0",
+    "click>=8.1.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+]
+
+[project.scripts]
+wechat = "wechat_engine.cli:main"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]

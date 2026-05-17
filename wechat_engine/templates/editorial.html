@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
+  max-width: 677px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #2c2c2c;
+  font-size: 17px;
+  line-height: 1.9;
+  background: #fff;
+}
+h1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  line-height: 1.4;
+  text-align: center;
+  letter-spacing: 2px;
+}
+h2 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 32px 0 16px;
+  text-align: center;
+}
+h2::before { content: "「"; color: #b8860b; }
+h2::after { content: "」"; color: #b8860b; }
+h3 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #b8860b;
+  margin: 24px 0 8px;
+}
+p {
+  margin: 14px 0;
+  text-indent: 2em;
+  text-align: justify;
+}
+blockquote {
+  border-left: 3px solid #b8860b;
+  margin: 20px 0;
+  padding: 12px 20px;
+  background: #faf8f0;
+  color: #555;
+  font-style: italic;
+}
+blockquote p { text-indent: 0; margin: 4px 0; }
+strong { color: #b8860b; }
+em { color: #8b7355; font-style: italic; }
+ul, ol { padding-left: 24px; margin: 12px 0; }
+li { margin: 8px 0; }
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 20px 0;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+hr {
+  border: none;
+  text-align: center;
+  margin: 32px 0;
+}
+hr::after {
+  content: "◆ ◆ ◆";
+  color: #b8860b;
+  letter-spacing: 8px;
+}
+.author-info {
+  text-align: center;
+  color: #888;
+  font-size: 13px;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+<body>
+  <h1>{{ title }}</h1>
+  <div class="author-info">{% if author %}{{ author }}{% endif %}</div>
+  <hr>
+  {{ content_html }}
+  {% if author %}
+  <div class="author-info">
+    <p>{{ author }}</p>
+  </div>
+  {% endif %}
+</body>
+</html>

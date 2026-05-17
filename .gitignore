@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.db
+*.db-journal
+.env
+.env.local
+.venv/
+venv/
+.ruff_cache/
+*.log
