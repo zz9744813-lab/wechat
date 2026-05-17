@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ 成长侧 ============
+
+model JournalEntry {
+  id             String   @id @default(cuid())
+  timestamp      DateTime @default(now())
+  rawText        String
+  mood           String   @default("calm") // 振奋/平静/低落/焦虑/愤怒/混乱
+  energy         Int      @default(5)      // 1-10
+  tags           String   @default("[]")   // JSON array
+  privacyLevel   Int      @default(2)      // 0-3
+
+  // AI 提取结果
+  extractedEvents    String @default("[]") // JSON array of Event
+  extractedEmotions  String @default("[]") // JSON array of Emotion
+  extractedThoughts  String @default("[]") // JSON array of Thought
+  extractedThemes    String @default("[]") // JSON array of string
+  matchedPatterns    String @default("[]") // JSON array of pattern IDs
+  bridgeSignal       String @default("{}") // 给小说侧的信号包
+
+  processedAt    DateTime?
+  processPasses  String   @default("[]") // JSON array of pass results
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Pattern {
+  id                String   @id @default(cuid())
+  name              String
+  description       String
+  firstObserved     DateTime @default(now())
+  triggerSignatures String   @default("[]") // JSON
+  typicalResponse   String   @default("[]") // JSON
+  relatedThemes     String   @default("[]") // JSON
+  characterCarriers String   @default("[]") // JSON array of character IDs
+  evolutionLog      String   @default("[]") // JSON
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model GrowthArc {
+  id                 String   @id @default(cuid())
+  name               String
+  phase              String   @default("觉察") // 觉察→挣扎→实验→巩固→整合
+  description        String   @default("")
+  keyMilestones      String   @default("[]") // JSON
+  linkedJournalIds   String   @default("[]") // JSON
+  linkedChapterIds   String   @default("[]") // JSON
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// ============ 小说侧 ============
+
+model WorldBible {
+  id              String   @id @default("main")
+  metaphysics     String   @default("") // 宇宙规则
+  geography       String   @default("")
+  factions        String   @default("")
+  history         String   @default("")
+  recurringMotifs String   @default("[]") // JSON
+  tonalPalette    String   @default("")
+  hardRules       String   @default("[]") // JSON
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Character {
+  id               String   @id @default(cuid())
+  name             String
+  archetype        String   @default("") // 用户的哪个侧面
+  physicalDesc     String   @default("")
+  coreWound        String   @default("")
+  defenseMechanisms String  @default("[]") // JSON
+  growthEdge        String  @default("")
+  voicePattern     String   @default("") // 说话节奏、口头禅
+  arcPosition       String  @default("")
+  relationships     String  @default("{}") // JSON
+  secretKnowledge   String  @default("")
+  mirrorLink        String  @default("[]") // 关联的模式/弧线 ID
+  isProtagonist     Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Chapter {
+  id              String   @id @default(cuid())
+  volume          Int      @default(1)
+  chapterNum      Int
+  title           String
+  povCharacterId  String?
+  synopsis        String   @default("")
+  status          String   @default("outline") // outline/draft_1/reviewing/final
+
+  // 多 pass 管线
+  passOutline       String @default("")
+  passDraft         String @default("")
+  passVoiceCheck    String @default("")
+  passConsistency   String @default("")
+  passProsePolish   String @default("")
+  passThemeAudit    String @default("")
+  passEmotionArc    String @default("")
+  passFinal         String @default("")
+
+  finalText         String @default("")
+  linkedJournalIds  String @default("[]") // JSON
+  themesExplored    String @default("[]") // JSON
+  emotionsPalette   String @default("[]") // JSON
+  tokenCount        Int    @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  povCharacter Character? @relation(fields: [povCharacterId], references: [id])
+
+  @@unique([volume, chapterNum])
+  @@index([volume])
+}
+
+model Branch {
+  id              String   @id @default(cuid())
+  divergeFromId   String?
+  divergeQuestion String   @default("")
+  generatedChapters String @default("[]") // JSON
+  status          String   @default("exploring") // exploring/merged/archived
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============ AI 日志 ============
+
+model AIPassLog {
+  id          String   @id @default(cuid())
+  operation   String   // journal_process / chapter_pass / bridge / ...
+  passName    String   // events_extract / draft_1 / ...
+  model       String
+  inputTokens Int      @default(0)
+  outputTokens Int     @default(0)
+  costUsd     Float    @default(0)
+  targetId    String?  // journal/chapter ID
+  targetType  String?  // journal/chapter/bridge
+  result      String   @default("{}") // JSON
+  createdAt   DateTime @default(now())
+}
