@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
         defenseMechanisms: JSON.stringify(body.defenseMechanisms ?? []),
         growthEdge: body.growthEdge ?? "",
         voicePattern: body.voicePattern ?? "",
+        arcPosition: body.arcPosition ?? "",
         relationships: JSON.stringify(body.relationships ?? {}),
         secretKnowledge: body.secretKnowledge ?? "",
         mirrorLink: JSON.stringify(body.mirrorLink ?? []),
@@ -27,5 +28,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, data: character });
   } catch (error) {
     return NextResponse.json({ ok: false, error: "创建失败" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ...updates } = body;
+    if (!id) return NextResponse.json({ ok: false, error: "id required" }, { status: 400 });
+
+    const data: any = {};
+    if (updates.name !== undefined) data.name = updates.name;
+    if (updates.archetype !== undefined) data.archetype = updates.archetype;
+    if (updates.physicalDesc !== undefined) data.physicalDesc = updates.physicalDesc;
+    if (updates.coreWound !== undefined) data.coreWound = updates.coreWound;
+    if (updates.defenseMechanisms !== undefined) data.defenseMechanisms = JSON.stringify(updates.defenseMechanisms);
+    if (updates.growthEdge !== undefined) data.growthEdge = updates.growthEdge;
+    if (updates.voicePattern !== undefined) data.voicePattern = updates.voicePattern;
+    if (updates.arcPosition !== undefined) data.arcPosition = updates.arcPosition;
+    if (updates.relationships !== undefined) data.relationships = JSON.stringify(updates.relationships);
+    if (updates.secretKnowledge !== undefined) data.secretKnowledge = updates.secretKnowledge;
+    if (updates.mirrorLink !== undefined) data.mirrorLink = JSON.stringify(updates.mirrorLink);
+    if (updates.isProtagonist !== undefined) data.isProtagonist = updates.isProtagonist;
+
+    const character = await prisma.character.update({ where: { id }, data });
+    return NextResponse.json({ ok: true, data: character });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: "更新失败" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) return NextResponse.json({ ok: false, error: "id required" }, { status: 400 });
+    await prisma.character.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: "删除失败" }, { status: 500 });
   }
 }

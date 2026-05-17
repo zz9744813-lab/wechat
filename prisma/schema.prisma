@@ -31,6 +31,10 @@ model JournalEntry {
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([timestamp])
+  @@index([processedAt])
+  @@index([mood])
 }
 
 model Pattern {
@@ -46,6 +50,8 @@ model Pattern {
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([isActive])
 }
 
 model GrowthArc {
@@ -58,6 +64,8 @@ model GrowthArc {
   linkedChapterIds   String   @default("[]") // JSON
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  @@index([phase])
 }
 
 // ============ 小说侧 ============
@@ -91,6 +99,10 @@ model Character {
   isProtagonist     Boolean @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  chapters Chapter[]
+
+  @@index([isProtagonist])
 }
 
 model Chapter {
@@ -122,9 +134,11 @@ model Chapter {
   updatedAt         DateTime @updatedAt
 
   povCharacter Character? @relation(fields: [povCharacterId], references: [id])
+  branches     Branch[]   @relation("SourceChapter")
 
   @@unique([volume, chapterNum])
   @@index([volume])
+  @@index([status])
 }
 
 model Branch {
@@ -132,9 +146,15 @@ model Branch {
   divergeFromId   String?
   divergeQuestion String   @default("")
   generatedChapters String @default("[]") // JSON
+  insight         String   @default("")   // 分支揭示的真相
   status          String   @default("exploring") // exploring/merged/archived
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  sourceChapter Chapter? @relation("SourceChapter", fields: [divergeFromId], references: [id])
+
+  @@index([status])
+  @@index([divergeFromId])
 }
 
 // ============ AI 日志 ============
@@ -148,7 +168,12 @@ model AIPassLog {
   outputTokens Int     @default(0)
   costUsd     Float    @default(0)
   targetId    String?  // journal/chapter ID
-  targetType  String?  // journal/chapter/bridge
+  targetType  String?  // journal/chapter/bridge/branch/character/narrative
   result      String   @default("{}") // JSON
   createdAt   DateTime @default(now())
+
+  @@index([operation])
+  @@index([targetType])
+  @@index([createdAt])
+  @@index([passName])
 }

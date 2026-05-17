@@ -25,9 +25,10 @@
 | Framework | Next.js 15 (App Router) |
 | Language | TypeScript |
 | DB | SQLite + Prisma |
-| UI | Tailwind CSS |
-| AI | Anthropic Claude |
+| UI | Tailwind CSS + Radix UI |
+| AI | Anthropic Claude (Sonnet + Haiku) |
 | Validation | Zod |
+| Voice | Web Speech API |
 
 ## 快速开始
 
@@ -41,75 +42,156 @@ npm run dev
 
 ## 功能模块
 
-### 日记 (Journal)
-- 自然语言输入 + 心情/能量标记
-- AI 7-pass 自动处理:事件抽取→情绪光谱→念头识别→模式匹配→主题提取→桥接信号→反思提示
+### 日记 (Journal) — 10-pass 处理管线
+- 自然语言 + 语音输入
+- 心情/能量标记
+- AI 10-pass 自动处理:
+  1. 事件抽取
+  2. 情绪光谱分析
+  3. 念头与信念识别
+  4. 模式匹配
+  5. 深度模式识别
+  6. 主题提取
+  7. 桥接信号生成
+  8. 意象变形
+  9. 危机检测
+  10. 反思提示生成
 - 隐私分级,日记原文不出库
+- 自动危机检测 + 求助热线
 
-### 小说 (Novel)
+### 小说 (Novel) — 5-9 pass 写作管线
 - 章节大纲生成 (基于世界设定 + 角色 + 用户信号包)
-- 3-pass 写作管线:初稿→角色声音审查→散文打磨
+- 写作管线 (MVP 5 pass, 完全体 9 pass):
+  1. 场景扩展
+  2. 初稿写作
+  3. 角色声音审查
+  4. 世界一致性审查
+  5. 主题审计
+  6. 情感弧线检查
+  7. 散文打磨
+  8. 风格光谱分析
+  9. 终稿合成 (仅在需要时)
+- 质量评分系统
 - 阅读已完成章节
 
+### 平行宇宙 (Branches)
+- 在已完成章节上生成"如果……会怎样"分支
+- 探索角色未走的路
+- 分支可合并入主线或归档
+
 ### 世界 (World)
-- World Bible 编辑:宇宙规则、调性
-- 角色管理:名字、原型、核心创伤、语言模式、成长边缘
+- World Bible 编辑:宇宙规则、调性、地理、势力、历史
+- 角色管理:名字、原型、核心创伤、语言模式、成长边缘、外貌、防御机制、秘密知识
+- 角色心理深度分析 (AI 驱动)
 
 ### 模式 (Patterns)
 - 自动识别反复出现的行为模式
 - 模式与角色关联 (character_carriers)
+- 手动创建和管理模式
+- 模式演变追踪
 
-## 章节写作管线
+### 成长弧线 (Growth Arcs)
+- 追踪长期成长:觉察→挣扎→实验→巩固→整合
+- 里程碑记录
+- 与日记和章节关联
 
-每章经过 3 个 pass (MVP):
+### 生命叙事 (Narratives)
+- 季度生命叙事:文学性的生命状态描述
+- 年度全景叙事:一年的回望
+- 主题分布、成长里程碑、未解决张力
 
-| Pass | 任务 |
-|---|---|
-| 1. 初稿 | 根据大纲写出完整章节 |
-| 2. 声音审查 | 检查角色台词是否符合语言模式 |
-| 3. 散文打磨 | 句法、意象、节奏的工艺级润色 |
+### 设置 (Settings)
+- 数据导出 (JSON)
+- 批量日记重新处理
+- 安全状态检查
+- 求助热线信息
 
-完全体将扩展到 10 pass,增加世界一致性、主题审计、情感弧线检查等。
+## AI 管线详解
+
+### 日记处理管线 (10 pass)
+
+| Pass | 任务 | 模型 | 输出 |
+|---|---|---|---|
+| 1 | 事件抽取 | Haiku | 事件列表 |
+| 2 | 情绪光谱 | Haiku | 20+ 维度情绪 |
+| 3 | 念头识别 | Haiku | 认知信号 |
+| 4 | 模式匹配 | Haiku | 命中的已知模式 |
+| 5 | 深度模式识别 | Haiku | 新的行为模式 |
+| 6 | 主题提取 | Haiku | 文学主题 |
+| 7 | 桥接信号 | Sonnet | 给小说的信号包 |
+| 8 | 意象变形 | Haiku | 主题→意象映射 |
+| 9 | 危机检测 | Haiku | 风险等级评估 |
+| 10 | 反思提示 | Haiku | 温和的提问 |
+
+### 章节写作管线 (5-9 pass)
+
+| Pass | 任务 | 模型 | 输出 |
+|---|---|---|---|
+| 1 | 场景扩展 | Sonnet | 详细场景计划 |
+| 2 | 初稿写作 | Sonnet | 完整章节 |
+| 3 | 角色声音审查 | Sonnet | 台词一致性检查 |
+| 4 | 世界一致性审查 | Sonnet | 设定矛盾检测 |
+| 5 | 主题审计 | Sonnet | 说教度/含蓄度 |
+| 6 | 情感弧线检查 | Sonnet | 节奏和起伏 |
+| 7 | 散文打磨 | Sonnet | 工艺级润色 |
+| 8 | 风格光谱分析 | Haiku | 风格一致性 |
+| 9 | 终稿合成 | Sonnet | 最终修复 (按需) |
 
 ## 安全机制
 
 - **隐私铁律**:日记原文永远经过桥接层去敏,绝不原文出库
 - **不诊断**:不输出任何医学/心理诊断标签
-- **危机识别**:检测到风险信号 → 立即展示真实求助资源
+- **危机识别**:每篇日记自动扫描,检测到风险信号 → 立即展示真实求助资源
 - **现实优先**:小说不能替代行动决策
+- **隐私检测**:自动识别手机号/邮箱/身份证号等隐私信息并脱敏
 
 ## 项目结构
 
 ```
 app/
-├── page.tsx              # 仪表盘
-├── journal/page.tsx      # 日记
-├── novel/page.tsx        # 小说
-├── world/page.tsx        # 世界设定
-├── patterns/page.tsx     # 个人模式
-├── settings/page.tsx     # 设置
+├── page.tsx                # 仪表盘 (丰富数据 + 趋势图)
+├── journal/page.tsx        # 日记 (文字 + 语音输入, 10-pass 结果)
+├── novel/page.tsx          # 小说 (章节 + 平行宇宙分支)
+├── world/page.tsx          # 世界设定 + 角色管理 + 心理分析
+├── patterns/page.tsx       # 行为模式 + 成长弧线
+├── settings/page.tsx       # 设置 + 生命叙事 + 数据管理
+├── middleware.ts            # 全局中间件
 └── api/
-    ├── journals/         # 日记 API
-    ├── chapters/         # 章节 API
-    ├── chapters/write/   # 章节写作
-    ├── world/            # 世界设定 API
-    ├── characters/       # 角色 API
-    └── dashboard/        # 仪表盘
+    ├── journals/           # 日记 CRUD + AI 处理
+    │   └── batch/          # 批量处理
+    ├── chapters/           # 章节 CRUD + 大纲生成
+    │   └── write/          # 5-9 pass 写作
+    ├── branches/           # 平行宇宙分支
+    ├── characters/         # 角色 CRUD
+    │   └── psychology/     # 角色心理分析
+    ├── growth-arcs/        # 成长弧线 CRUD
+    ├── patterns/           # 模式管理
+    ├── world/              # 世界设定 CRUD
+    ├── narratives/         # 季度/年度生命叙事
+    ├── voice/              # 语音输入处理
+    ├── reflections/        # 反思提示 + 共鸣段落
+    ├── crisis/             # 危机检测状态
+    └── dashboard/          # 仪表盘数据聚合
 
 lib/
 ├── ai/
-│   ├── client.ts         # Anthropic SDK
-│   ├── prompts.ts        # 所有 Prompt 模板
-│   ├── schemas.ts        # Zod Schema
-│   └── pipeline.ts       # 日记处理 + 章节写作管线
+│   ├── client.ts           # Anthropic SDK (Sonnet + Haiku)
+│   ├── prompts.ts          # 25+ Prompt 模板
+│   ├── schemas.ts          # 18+ Zod Schema
+│   └── pipeline.ts         # 日记处理 + 章节写作 + 分支 + 叙事管线
 ├── bridge/
-│   └── index.ts          # 桥接层 (事件变形、信号包构建)
-├── db.ts                 # Prisma Client
+│   └── index.ts            # 桥接层 (三层变形 + 隐私守护 + 意象库)
+├── db.ts                   # Prisma Client
 └── utils.ts
 
+components/
+├── sidebar.tsx             # 导航侧边栏
+└── viz/
+    └── charts.tsx          # 可视化组件 (能量图/主题云/心情分布/质量雷达/成长时间线)
+
 prisma/
-├── schema.prisma         # 数据模型
-└── seed.ts               # 默认世界圣经
+├── schema.prisma           # 8 个数据模型
+└── seed.ts                 # 默认世界圣经
 ```
 
 ## 设计哲学
@@ -119,6 +201,7 @@ prisma/
 3. **小说是为用户写的,但不能是关于用户的** — 隐喻、变形、提纯
 4. **AI 不替用户活** — 洞见以"也许"开头,建议以"你怎么看"结尾
 5. **保留"沉默"** — 系统要有判断"今天不动笔"的智慧
+6. **安全第一** — 危机检测不是功能,是责任
 
 ## License
 

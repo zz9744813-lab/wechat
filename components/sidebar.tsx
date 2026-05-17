@@ -5,21 +5,21 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "首页", icon: "\u2600" },
-  { href: "/journal", label: "日记", icon: "\u270D" },
-  { href: "/novel", label: "小说", icon: "\u2606" },
-  { href: "/world", label: "世界", icon: "\u2302" },
-  { href: "/patterns", label: "模式", icon: "\u2261" },
-  { href: "/settings", label: "设置", icon: "\u2699" },
+  { href: "/", label: "仪表盘", icon: "\u{1F4CA}" },
+  { href: "/journal", label: "日记", icon: "\u{270D}" },
+  { href: "/novel", label: "小说", icon: "\u{1F4D6}" },
+  { href: "/world", label: "世界", icon: "\u{1F30D}" },
+  { href: "/patterns", label: "模式", icon: "\u{1F504}" },
+  { href: "/settings", label: "设置", icon: "\u{2699}" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   return (
-    <aside className="w-52 border-r border-border h-screen sticky top-0 flex flex-col">
+    <aside className="w-56 border-r border-border h-screen sticky top-0 flex flex-col">
       <div className="p-4 border-b border-border">
         <h1 className="text-lg font-bold tracking-tight">Mirror Epic</h1>
-        <p className="text-xs text-muted-foreground">你写一行,世界长一卷</p>
+        <p className="text-xs text-muted-foreground">镜像史诗 v0.2.0</p>
       </div>
       <nav className="flex-1 p-2 space-y-0.5">
         {navItems.map((item) => {
@@ -34,6 +34,14 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="p-4 border-t border-border">
+        <div className="text-[10px] text-muted-foreground space-y-0.5">
+          <div>日记 10-pass 处理</div>
+          <div>章节 5-9 pass 写作</div>
+          <div>危机检测 · 模式识别</div>
+          <div>平行宇宙 · 生命叙事</div>
+        </div>
+      </div>
     </aside>
   );
 }
